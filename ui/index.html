@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网络工程师工具箱</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── 侧边栏 ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i data-lucide="network"></i></div>
+      <h1>网络工具箱</h1>
+      <p>Network Engineer Toolkit</p>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPage('subnet')">
+        <i data-lucide="calculator" class="nav-icon"></i>
+        <span>子网计算</span>
+      </button>
+      <button class="nav-item" onclick="showPage('scanner')">
+        <i data-lucide="scan-search" class="nav-icon"></i>
+        <span>IP 扫描</span>
+      </button>
+      <button class="nav-item" onclick="showPage('http')">
+        <i data-lucide="globe" class="nav-icon"></i>
+        <span>HTTP 检测</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <i data-lucide="cpu" style="width:12px;height:12px;vertical-align:-2px"></i>
+      v0.2.0 · Tauri + Rust
+    </div>
+  </aside>
+
+  <!-- ── 内容区 ── -->
+  <main class="content">
+
+    <!-- 子网计算 -->
+    <div class="page active" id="page-subnet">
+      <div class="page-header">
+        <h2>子网掩码计算器</h2>
+        <p>支持前缀长度（/24）和点分掩码（255.255.255.0）输入</p>
+      </div>
+      <div class="page-body">
+
+        <div class="card">
+          <div class="card-title">输入参数</div>
+          <div class="form-row">
+            <div class="field">
+              <label>IP 地址</label>
+              <input type="text" id="ip-input" placeholder="例如: 192.168.1.0" style="width:200px"
+                     onkeydown="if(event.key==='Enter') calculateSubnet()">
+            </div>
+            <div class="field">
+              <label>前缀长度 / 掩码</label>
+              <div class="spin-box">
+                <input type="text" id="prefix-input" value="24" placeholder="24 或 255.255.255.0"
+                       onkeydown="if(event.key==='Enter') calculateSubnet()">
+                <div class="spin-btns">
+                  <button onclick="adjustPrefix(1)" title="增加">▲</button>
+                  <button onclick="adjustPrefix(-1)" title="减少">▼</button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" onclick="calculateSubnet()">
+                <i data-lucide="play" style="width:14px;height:14px"></i> 计 算
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="subnet-error"></div>
+
+        <div class="card" id="subnet-result-card" style="display:none">
+          <div class="card-title">计算结果</div>
+          <table id="subnet-table">
+            <colgroup>
+              <col style="width:170px">
+              <col>
+            </colgroup>
+            <tbody id="subnet-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- IP 扫描 -->
+    <div class="page" id="page-scanner">
+      <div class="page-header">
+        <h2>存活 IP 扫描</h2>
+        <p>使用系统 ping 命令探测网段内存活主机，无需 root 权限</p>
+      </div>
+      <div class="page-body">
+
+        <div class="card">
+          <div class="card-title">扫描参数</div>
+          <div class="form-row">
+            <div class="field">
+              <label>网络地址 (CIDR)</label>
+              <input type="text" id="cidr-input" placeholder="例如: 192.168.1.0/24" style="width:220px">
+            </div>
+            <div class="field">
+              <label>超时 (毫秒)</label>
+              <input type="number" id="timeout-input" value="1000" min="100" max="10000" style="width:110px">
+            </div>
+            <div class="field">
+              <label>并发数</label>
+              <input type="number" id="concurrent-input" value="50" min="1" max="200" style="width:90px">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" id="scan-start-btn" onclick="startScan()">
+                  <i data-lucide="play" style="width:14px;height:14px"></i> 开始扫描
+                </button>
+                <button class="btn btn-danger" id="scan-stop-btn" onclick="stopScan()" style="display:none">
+                  <i data-lucide="square" style="width:14px;height:14px"></i> 停 止
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="scan-error"></div>
+
+        <div class="card" id="scan-progress-card" style="display:none">
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span>扫描进度</span>
+              <span id="scan-progress-text">0 / 0</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="scan-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card results-wrap" id="scan-result-card" style="display:none">
+          <div class="results-header">
+            <div class="card-title">存活主机</div>
+            <span class="badge green" id="scan-count">0 台</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:200px">IP 地址</th>
+                  <th style="width:100px">延迟</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="scan-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HTTP 检测 -->
+    <div class="page" id="page-http">
+      <div class="page-header">
+        <h2>HTTP 状态检测</h2>
+        <p>并发检测多个 URL 的响应状态、延迟及 SSL 可达性</p>
+      </div>
+      <div class="page-body">
+
+        <div class="card">
+          <div class="card-title">输入 URL（每行一个）</div>
+          <textarea id="urls-input" placeholder="https://example.com&#10;https://google.com&#10;http://192.168.1.1"></textarea>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn-primary" id="http-start-btn" onclick="checkHttp()">
+              <i data-lucide="activity" style="width:14px;height:14px"></i> 开始检测
+            </button>
+            <span class="text-secondary" id="http-status-text" style="font-size:13px"></span>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="http-error"></div>
+
+        <div class="card results-wrap" id="http-result-card" style="display:none">
+          <div class="results-header">
+            <div class="card-title">检测结果</div>
+            <span class="badge" id="http-count">0 条</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>URL</th>
+                  <th style="width:140px">状态码</th>
+                  <th style="width:100px">延迟</th>
+                </tr>
+              </thead>
+              <tbody id="http-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
