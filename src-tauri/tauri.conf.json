@@ -1,7 +1,7 @@
 {
-  "productName": "AI-Inspection",
-  "version": "3.58.0",
-  "identifier": "com.inspection.rust",
+  "productName": "NetToolKit",
+  "version": "1.0.0",
+  "identifier": "com.net-toolkit.app",
   "build": {
     "frontendDist": "../dist",
     "beforeBuildCommand": "npm run build",
@@ -11,15 +11,14 @@
   "app": {
     "windows": [
       {
-        "title": "AI巡检助手",
-        "width": 1500,
-        "height": 900,
-        "minWidth": 1200,
-        "minHeight": 700,
+        "title": "NetToolKit",
+        "width": 1100,
+        "height": 750,
+        "minWidth": 800,
+        "minHeight": 600,
         "resizable": true,
         "visible": true,
-        "decorations": true,
-        "transparent": true
+        "decorations": true
       }
     ],
     "security": {
@@ -28,20 +27,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "msi",
-      "deb",
-      "dmg"
-    ],
+    "targets": ["msi", "deb", "dmg"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.ico"
-    ],
-    "resources": [
-      "WebView2Loader.dll",
-      "MicrosoftEdgeWebview2Setup.exe"
     ]
   }
 }
