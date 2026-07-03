@@ -107,6 +107,7 @@ pub fn run() {
             commands::tools::stop_tftp_server,
             commands::tools::start_syslog_server,
             commands::tools::stop_syslog_server,
+            commands::tools::batch_ping,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

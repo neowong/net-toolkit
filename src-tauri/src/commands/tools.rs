@@ -816,3 +816,35 @@ pub fn stop_syslog_server() -> Result<(), String> {
     }
     Ok(())
 }
+
+// ============================================================
+// Batch Ping
+// ============================================================
+
+#[tauri::command]
+pub async fn batch_ping(
+    app: tauri::AppHandle,
+    targets: String,
+    count: u32,
+    interval_ms: u64,
+    timeout_ms: u64,
+    concurrency: usize,
+) -> Result<Vec<services::batch_ping::PingResult>, String> {
+    let target_list = services::batch_ping::parse_targets(&targets);
+    if target_list.is_empty() {
+        return Err("请输入至少一个目标".to_string());
+    }
+
+    tracing::info!("批量 Ping 开始: targets={}, count={}, concurrency={}", target_list.len(), count, concurrency);
+    let start = std::time::Instant::now();
+
+    let results = services::batch_ping::batch_ping(
+        app, target_list, count, interval_ms, timeout_ms, concurrency,
+    ).await;
+
+    let alive = results.iter().filter(|r| r.alive).count();
+    let latency = start.elapsed().as_millis();
+    tracing::info!("批量 Ping 完成: total={}, alive={}, latency={}ms", results.len(), alive, latency);
+
+    Ok(results)
+}
