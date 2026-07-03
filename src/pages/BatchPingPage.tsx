@@ -45,7 +45,9 @@ export default function BatchPingPage() {
       const { ip, round, alive, response_time_ms } = e.payload;
       setLiveData(prev => {
         const existing = prev[ip] || [];
-        return { ...prev, [ip]: [...existing, { round, alive, time: response_time_ms }] };
+        const updated = [...existing, { round, alive, time: response_time_ms }];
+        // 只保留最近 CHART_MAX 条，避免大量轮次时内存膨胀
+        return { ...prev, [ip]: updated.length > 100 ? updated.slice(-100) : updated };
       });
     });
     unlistenRef.current = unlisten;
@@ -84,20 +86,29 @@ export default function BatchPingPage() {
   const aliveCount = results?.filter(r => r.alive).length ?? 0;
   const deadCount = results ? results.length - aliveCount : 0;
 
+  const CHART_MAX = 50; // 图表最多显示最近 50 轮
+
   const renderChart = (ip: string) => {
-    const data = liveData[ip] || [];
-    if (data.length === 0) return null;
+    const allData = liveData[ip] || [];
+    if (allData.length === 0) return null;
+    const data = allData.slice(-CHART_MAX);
     const maxTime = Math.max(...data.map(d => d.time ?? 0), 1);
+    const totalRounds = allData.length;
     return (
-      <div className="flex items-end gap-px h-6">
-        {data.map((d, i) => (
-          <div
-            key={i}
-            className={`w-1.5 rounded-t ${d.alive ? "bg-[hsl(var(--success))]" : "bg-[hsl(var(--danger))]"}`}
-            style={{ height: d.time != null ? `${Math.max((d.time / maxTime) * 100, 8)}%` : "8%" }}
-            title={`#${d.round}: ${d.time != null ? d.time.toFixed(1) + "ms" : "超时"}`}
-          />
-        ))}
+      <div className="flex items-center gap-1.5">
+        <div className="flex items-end gap-px h-5">
+          {data.map((d) => (
+            <div
+              key={d.round}
+              className={`w-1 rounded-t ${d.alive ? "bg-[hsl(var(--success))]" : "bg-[hsl(var(--danger))]"}`}
+              style={{ height: d.time != null ? `${Math.max((d.time / maxTime) * 100, 10)}%` : "10%" }}
+              title={`#${d.round}: ${d.time != null ? d.time.toFixed(1) + "ms" : "超时"}`}
+            />
+          ))}
+        </div>
+        {totalRounds > CHART_MAX && (
+          <span className="text-[10px] text-[hsl(var(--text-tertiary))] shrink-0">近{CHART_MAX}/{totalRounds}</span>
+        )}
       </div>
     );
   };
