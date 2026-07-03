@@ -480,9 +480,8 @@ pub async fn start_tftp_server(
         return Err("选择的路径不是有效目录".into());
     }
 
-    let socket = bind_privileged_port(port).await.map_err(|e| {
+    let socket = bind_privileged_port(port).await.inspect_err(|_e| {
         TFTP_RUNNING.store(false, Ordering::SeqCst);
-        e
     })?;
 
     tracing::info!("[tftp] 启动服务, 目录: {}, 端口: {}", file_path, port);
@@ -538,7 +537,7 @@ pub async fn start_tftp_server(
                                 "type": "error"
                             }));
                             // 发送 ERROR 包
-                            let mut err_pkt = vec![0u8; 5 + 14];
+                            let mut err_pkt = [0u8; 5 + 14];
                             err_pkt[0] = 0; err_pkt[1] = 5;
                             err_pkt[2] = 0; err_pkt[3] = 1;
                             err_pkt[4..18].copy_from_slice(b"File not found\0");
@@ -769,9 +768,8 @@ pub async fn start_syslog_server(
 
     let port = port.unwrap_or(514);
 
-    let socket = bind_privileged_port(port).await.map_err(|e| {
+    let socket = bind_privileged_port(port).await.inspect_err(|_e| {
         SYSLOG_RUNNING.store(false, Ordering::SeqCst);
-        e
     })?;
 
     tracing::info!("[syslog] 启动监听, 端口: {}", port);

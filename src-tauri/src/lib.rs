@@ -9,11 +9,17 @@ pub struct AppState {
     pub ip_db: Arc<parking_lot::RwLock<Option<Arc<Vec<u8>>>>>,
 }
 
-impl AppState {
-    pub fn new() -> Self {
+impl Default for AppState {
+    fn default() -> Self {
         Self {
             ip_db: Arc::new(parking_lot::RwLock::new(None)),
         }
+    }
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

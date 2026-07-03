@@ -21,9 +21,7 @@ pub async fn dns_lookup(domain: &str, record_type: &str) -> Result<DnsResult, St
     use trust_dns_resolver::TokioAsyncResolver;
     use trust_dns_resolver::config::*;
 
-    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default())
-        .await
-        .map_err(|e| format!("DNS 解析器初始化失败: {}", e))?;
+    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
 
     let mut records = Vec::new();
     let rt = record_type.to_uppercase();
@@ -151,7 +149,7 @@ pub async fn dns_lookup(domain: &str, record_type: &str) -> Result<DnsResult, St
 
     if rt == "PTR" || rt == "ALL" {
         if let Ok(addr) = domain.parse::<std::net::IpAddr>() {
-            if let Ok(response) = resolver.reverse_lookup(addr) {
+            if let Ok(response) = resolver.reverse_lookup(addr).await {
                 for r in response.iter() {
                     records.push(DnsRecord {
                         record_type: "PTR".to_string(),

@@ -34,6 +34,15 @@ xdb-parse = "0.2"
 hostname = "0.4"
 os_info = "3"
 trust-dns-resolver = "0.23"
+rand = "0.8"
+hmac = "0.12"
+sha2 = "0.10"
+sha1 = "0.10"
+md-5 = "0.10"
+aes = "0.8"
+des = "0.8"
+cipher = "0.4"
+digest = "0.10"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
