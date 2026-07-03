@@ -148,58 +148,63 @@ export default function BatchPingPage() {
         </div>
       </div>
 
-      {pinging && (
-        <div className="flex items-center gap-2 text-sm text-[hsl(var(--text-secondary))]">
-          <Loader2 size={16} className="animate-spin" />
-          已发现 {Object.values(liveData).filter(d => d.some(p => p.alive)).length} 个在线...
-        </div>
-      )}
-
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
 
-      {results && (
-        <div className="space-y-3">
-          <div className="flex gap-4 text-sm">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-[hsl(var(--success))]" />
-              在线 <span className="font-semibold">{aliveCount}</span>
+      {/* 实时/最终结果表格 */}
+      {(pinging ? Object.keys(liveData).length > 0 : results) && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-4 text-xs">
+            {pinging && (
+              <span className="flex items-center gap-1.5 text-[hsl(var(--text-secondary))]">
+                <Loader2 size={12} className="animate-spin" />
+                {Object.keys(liveData).length} 个目标已响应
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-[hsl(var(--success))]">
+              <CheckCircle2 size={12} />
+              在线 {pinging ? Object.values(liveData).filter(d => d.some(p => p.alive)).length : aliveCount}
             </span>
-            <span className="flex items-center gap-1.5">
-              <XCircle size={14} className="text-[hsl(var(--danger))]" />
-              离线 <span className="font-semibold">{deadCount}</span>
+            <span className="flex items-center gap-1 text-[hsl(var(--danger))]">
+              <XCircle size={12} />
+              离线 {pinging ? Object.values(liveData).filter(d => d.length > 0 && !d.some(p => p.alive)).length : deadCount}
             </span>
-            <span className="text-[hsl(var(--text-tertiary))]">共 {results.length} 个目标</span>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-[hsl(var(--border))]">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[hsl(var(--muted))] text-left">
-                  <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))]">IP</th>
-                  <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))] w-20">状态</th>
-                  <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))] w-24">延迟</th>
-                  <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))]">图表</th>
+                  <th className="px-3 py-1.5 font-medium text-[hsl(var(--text-secondary))] text-xs">IP</th>
+                  <th className="px-3 py-1.5 font-medium text-[hsl(var(--text-secondary))] text-xs w-16">状态</th>
+                  <th className="px-3 py-1.5 font-medium text-[hsl(var(--text-secondary))] text-xs w-20">延迟</th>
+                  <th className="px-3 py-1.5 font-medium text-[hsl(var(--text-secondary))] text-xs">图表</th>
                 </tr>
               </thead>
               <tbody>
-                {results.map(r => (
+                {(pinging
+                  ? Object.entries(liveData).map(([ip, rounds]) => {
+                      const last = rounds[rounds.length - 1];
+                      return { ip, alive: last?.alive ?? false, response_time_ms: last?.time ?? null };
+                    })
+                  : results ?? []
+                ).map(r => (
                   <tr key={r.ip} className="border-t border-[hsl(var(--border))]">
-                    <td className="px-4 py-2 font-mono">{r.ip}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-1.5 font-mono text-xs">{r.ip}</td>
+                    <td className="px-3 py-1.5">
                       {r.alive ? (
-                        <span className="inline-flex items-center gap-1 text-[hsl(var(--success))]">
-                          <CheckCircle2 size={14} /> 在线
+                        <span className="inline-flex items-center gap-1 text-[hsl(var(--success))] text-xs">
+                          <CheckCircle2 size={12} /> 在线
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[hsl(var(--danger))]">
-                          <XCircle size={14} /> 离线
+                        <span className="inline-flex items-center gap-1 text-[hsl(var(--danger))] text-xs">
+                          <XCircle size={12} /> 离线
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-2 font-mono text-[hsl(var(--text-secondary))]">
+                    <td className="px-3 py-1.5 font-mono text-xs text-[hsl(var(--text-secondary))]">
                       {r.response_time_ms != null ? `${r.response_time_ms.toFixed(1)} ms` : "-"}
                     </td>
-                    <td className="px-4 py-2">{renderChart(r.ip)}</td>
+                    <td className="px-3 py-1.5">{renderChart(r.ip)}</td>
                   </tr>
                 ))}
               </tbody>
