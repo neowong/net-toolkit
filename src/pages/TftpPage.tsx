@@ -5,7 +5,6 @@ import { open } from "@tauri-apps/plugin-dialog";
 
 // ---- Shared styles ----------------------------------------------------------
 
-const inputClass = "px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)_/_0.4)]";
 const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
 const labelClass = "block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1";
 
