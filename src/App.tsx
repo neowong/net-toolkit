@@ -1,31 +1,33 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "./layouts/AppShell";
-import DashboardPage from "./pages/DashboardPage";
-import DevicesPage from "./pages/DevicesPage";
-import TemplatesPage from "./pages/TemplatesPage";
-import InspectionPage from "./pages/InspectionPage";
-import ReportManagementPage from "./pages/ReportManagementPage";
-import SettingsPage from "./pages/SettingsPage";
-import LogAnalysisPage from "./pages/LogAnalysisPage";
-import ToolsPage from "./pages/ToolsPage";
+import SubnetCalcPage from "./pages/SubnetCalcPage";
+import LiveScanPage from "./pages/LiveScanPage";
+import PortScanPage from "./pages/PortScanPage";
+import TraceroutePage from "./pages/TraceroutePage";
+import WebCheckPage from "./pages/WebCheckPage";
+import SnmpPage from "./pages/SnmpPage";
+import TftpPage from "./pages/TftpPage";
+import SyslogPage from "./pages/SyslogPage";
+import BatchPingPage from "./pages/BatchPingPage";
+import DnsQueryPage from "./pages/DnsQueryPage";
 import AboutPage from "./pages/AboutPage";
-import ChatPage from "./pages/ChatPage";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/devices" element={<DevicesPage />} />
-        <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/inspection" element={<InspectionPage />} />
-        <Route path="/reports" element={<ReportManagementPage />} />
-        <Route path="/tools" element={<ToolsPage />} />
-        <Route path="/logs" element={<LogAnalysisPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/" element={<Navigate to="/subnet" replace />} />
+        <Route path="/subnet" element={<SubnetCalcPage />} />
+        <Route path="/scanner" element={<LiveScanPage />} />
+        <Route path="/port" element={<PortScanPage />} />
+        <Route path="/trace" element={<TraceroutePage />} />
+        <Route path="/web" element={<WebCheckPage />} />
+        <Route path="/snmp" element={<SnmpPage />} />
+        <Route path="/tftp" element={<TftpPage />} />
+        <Route path="/syslog" element={<SyslogPage />} />
+        <Route path="/ping" element={<BatchPingPage />} />
+        <Route path="/dns" element={<DnsQueryPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center h-64 text-[hsl(var(--text-tertiary))]">
             <p className="text-lg font-medium">404 — 页面不存在</p>
