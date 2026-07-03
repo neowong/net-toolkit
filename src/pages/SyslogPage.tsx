@@ -69,7 +69,7 @@ function SyslogReceiver() {
 export default function SyslogPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">Syslog</h1>
+      <h1 className="text-sm font-semibold mb-2">Syslog</h1>
       <SyslogReceiver />
     </div>
   );

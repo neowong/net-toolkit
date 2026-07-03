@@ -103,8 +103,8 @@ export default function BatchPingPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-lg font-bold">批量 Ping</h1>
+    <div className="space-y-3">
+      <h1 className="text-sm font-semibold">批量 Ping</h1>
 
       <div className="flex gap-4">
         <div className="flex-1">

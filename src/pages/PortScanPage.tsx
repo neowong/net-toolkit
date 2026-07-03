@@ -113,7 +113,7 @@ function PortScanner() {
   const udpClosed = (udpResults ?? []).filter(r => !r.open && !r.filtered).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Scan type toggle */}
       <div className="flex gap-2">
         <button
@@ -277,7 +277,7 @@ function PortScanner() {
 export default function PortScanPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">端口扫描</h1>
+      <h1 className="text-sm font-semibold mb-2">端口扫描</h1>
       <PortScanner />
     </div>
   );

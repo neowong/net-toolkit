@@ -56,7 +56,7 @@ function WebChecker() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex items-end gap-3 flex-wrap">
         <div className="flex-1 min-w-80">
           <label className={labelClass}>URL (每行一个)</label>
@@ -137,7 +137,7 @@ function WebChecker() {
 export default function WebCheckPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">WEB检测</h1>
+      <h1 className="text-sm font-semibold mb-2">WEB检测</h1>
       <WebChecker />
     </div>
   );

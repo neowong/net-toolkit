@@ -89,7 +89,7 @@ function SnmpChecker() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Version toggle */}
       <div className="flex gap-2">
         <button
@@ -282,7 +282,7 @@ function SnmpChecker() {
 export default function SnmpPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">SNMP</h1>
+      <h1 className="text-sm font-semibold mb-2">SNMP</h1>
       <SnmpChecker />
     </div>
   );

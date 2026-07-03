@@ -126,7 +126,7 @@ function TftpServer() {
 export default function TftpPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">TFTP服务</h1>
+      <h1 className="text-sm font-semibold mb-2">TFTP服务</h1>
       <TftpServer />
     </div>
   );

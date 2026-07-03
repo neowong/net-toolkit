@@ -175,7 +175,7 @@ function SubnetCalc() {
   const fmt = (arr: string[] | number[]) => isV6 ? arr.join(":") : arr.join(".");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex items-end gap-3 flex-wrap">
         <div>
           <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">IP 地址</label>
@@ -249,7 +249,7 @@ function SubnetCalc() {
 export default function SubnetCalcPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">子网计算器</h1>
+      <h1 className="text-sm font-semibold mb-2">子网计算器</h1>
       <SubnetCalc />
     </div>
   );

@@ -62,7 +62,7 @@ function LiveScanner() {
   const dead = results?.filter(r => !r.alive) ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <p className="text-xs text-[hsl(var(--text-tertiary))]">基于系统 ping + TCP 后备(135/445)探测，结果仅供参考。</p>
       <div className="flex items-end gap-3 flex-wrap">
         <div>
@@ -163,7 +163,7 @@ function LiveScanner() {
 export default function LiveScanPage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">存活扫描</h1>
+      <h1 className="text-sm font-semibold mb-2">存活扫描</h1>
       <LiveScanner />
     </div>
   );

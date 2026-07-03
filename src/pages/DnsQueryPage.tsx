@@ -71,8 +71,8 @@ export default function DnsQueryPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-lg font-bold">DNS / Whois 查询</h1>
+    <div className="space-y-3">
+      <h1 className="text-sm font-semibold">DNS / Whois 查询</h1>
 
       {/* Mode toggle */}
       <div className="flex gap-2">

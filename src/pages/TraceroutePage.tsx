@@ -203,7 +203,7 @@ function Traceroute() {
 export default function TraceroutePage() {
   return (
     <div>
-      <h1 className="text-lg font-bold mb-4">路由跟踪</h1>
+      <h1 className="text-sm font-semibold mb-2">路由跟踪</h1>
       <Traceroute />
     </div>
   );
