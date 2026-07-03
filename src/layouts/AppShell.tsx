@@ -15,7 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { key: "subnet",  label: "子网计算", path: "/subnet",  icon: Calculator },
   { key: "scanner", label: "存活扫描", path: "/scanner", icon: Wifi },
-  { key: "port",    label: "端口扫描", path: "/port",    icon: Plug },
+  { key: "port",    label: "端口检测", path: "/port",    icon: Plug },
   { key: "trace",   label: "路由跟踪", path: "/trace",   icon: Route },
   { key: "web",     label: "WEB检测",  path: "/web",     icon: Globe },
   { key: "snmp",    label: "SNMP",     path: "/snmp",    icon: Radio },

@@ -18,7 +18,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs text-[hsl(var(--text-tertiary))]">
             <span>· 子网计算器</span>
             <span>· 存活扫描</span>
-            <span>· 端口扫描</span>
+            <span>· 端口检测</span>
             <span>· 路由跟踪</span>
             <span>· WEB 检测</span>
             <span>· SNMP</span>

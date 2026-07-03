@@ -62,15 +62,15 @@ pub async fn scan_ports(
     ports: String,
     timeout_ms: u64,
 ) -> Result<Vec<services::port_scanner::PortScanResult>, String> {
-    tracing::info!("TCP 端口扫描开始: ip={}, ports={}, timeout={}ms", ip, ports, timeout_ms);
+    tracing::info!("TCP 端口检测开始: ip={}, ports={}, timeout={}ms", ip, ports, timeout_ms);
     let start = std::time::Instant::now();
     let results = services::port_scanner::scan_ports_with_callback(&ip, &ports, timeout_ms, move |result| {
         let _ = app.emit("port-scan-result", &result);
     }).await;
     let latency = start.elapsed().as_millis();
     match &results {
-        Ok(r) => tracing::info!("TCP 端口扫描完成: ip={}, ports={}, results={}, latency={}ms", ip, ports, r.len(), latency),
-        Err(e) => tracing::warn!("TCP 端口扫描失败: ip={}, ports={}, latency={}ms, error={}", ip, ports, latency, e),
+        Ok(r) => tracing::info!("TCP 端口检测完成: ip={}, ports={}, results={}, latency={}ms", ip, ports, r.len(), latency),
+        Err(e) => tracing::warn!("TCP 端口检测失败: ip={}, ports={}, latency={}ms, error={}", ip, ports, latency, e),
     }
     results
 }
@@ -82,15 +82,15 @@ pub async fn scan_udp_ports(
     ports: String,
     timeout_ms: u64,
 ) -> Result<Vec<services::port_scanner::UdpPortResult>, String> {
-    tracing::info!("UDP 端口扫描开始: ip={}, ports={}, timeout={}ms", ip, ports, timeout_ms);
+    tracing::info!("UDP 端口检测开始: ip={}, ports={}, timeout={}ms", ip, ports, timeout_ms);
     let start = std::time::Instant::now();
     let results = services::port_scanner::scan_udp_ports_with_callback(&ip, &ports, timeout_ms, move |result| {
         let _ = app.emit("udp-scan-result", &result);
     }).await;
     let latency = start.elapsed().as_millis();
     match &results {
-        Ok(r) => tracing::info!("UDP 端口扫描完成: ip={}, ports={}, results={}, latency={}ms", ip, ports, r.len(), latency),
-        Err(e) => tracing::warn!("UDP 端口扫描失败: ip={}, ports={}, latency={}ms, error={}", ip, ports, latency, e),
+        Ok(r) => tracing::info!("UDP 端口检测完成: ip={}, ports={}, results={}, latency={}ms", ip, ports, r.len(), latency),
+        Err(e) => tracing::warn!("UDP 端口检测失败: ip={}, ports={}, latency={}ms, error={}", ip, ports, latency, e),
     }
     results
 }

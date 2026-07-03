@@ -277,7 +277,7 @@ function PortScanner() {
 export default function PortScanPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">端口扫描</h1>
+      <h1 className="text-sm font-semibold mb-2">端口检测</h1>
       <PortScanner />
     </div>
   );

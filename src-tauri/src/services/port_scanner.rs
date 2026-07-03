@@ -158,7 +158,7 @@ where
             let result = match tokio::task::spawn_blocking(move || scan_one(&ip, port, timeout)).await {
                 Ok(r) => r,
                 Err(e) => {
-                    tracing::warn!("端口扫描任务 panic (port={}): {}", port, e);
+                    tracing::warn!("端口检测任务 panic (port={}): {}", port, e);
                     PortScanResult { port, open: false, service: service_name(port), error: Some(e.to_string()) }
                 }
             };
