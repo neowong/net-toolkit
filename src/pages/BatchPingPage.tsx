@@ -106,41 +106,46 @@ export default function BatchPingPage() {
     <div className="space-y-3">
       <h1 className="text-sm font-semibold">批量 Ping</h1>
 
-      <div>
-        <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">目标 (每行一个或 CIDR)</label>
-        <textarea
-          value={targets} onChange={e => setTargets(e.target.value)}
-          rows={3}
-          className={`w-full ${inputClass} resize-y font-mono text-xs`}
-          placeholder={"8.8.8.8\n192.168.1.0/24\nexample.com"}
-        />
-      </div>
-
-      <div className="flex items-end gap-3 flex-wrap">
-        <div>
-          <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">次数</label>
-          <SpinInput min={1} max={100} step={1} value={count} onChange={v => setCount(String(v))} className="w-20" />
+      <div className="flex gap-4">
+        <div className="w-56">
+          <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">目标 (每行一个或 CIDR)</label>
+          <textarea
+            value={targets} onChange={e => setTargets(e.target.value)}
+            rows={4}
+            className={`w-full ${inputClass} resize-y font-mono text-xs`}
+            placeholder={"8.8.8.8\n192.168.1.0/24\nexample.com"}
+          />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">间隔 (ms)</label>
-          <SpinInput min={100} max={10000} step={100} value={interval} onChange={v => setInterval_(String(v))} className="w-24" />
+        <div className="flex-1 space-y-2">
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">次数</label>
+              <SpinInput min={1} max={100} step={1} value={count} onChange={v => setCount(String(v))} className="w-20" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">间隔 (ms)</label>
+              <SpinInput min={100} max={10000} step={100} value={interval} onChange={v => setInterval_(String(v))} className="w-24" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">超时 (ms)</label>
+              <SpinInput min={500} max={10000} step={500} value={timeout} onChange={v => setTimeout_(String(v))} className="w-24" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">并发</label>
+              <SpinInput min={1} max={200} step={10} value={concurrency} onChange={v => setConcurrency(String(v))} className="w-20" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handlePing} disabled={pinging} className={btnClass}>
+              {pinging ? "Ping 中..." : "开始 Ping"}
+            </button>
+            {results && (
+              <button onClick={exportCsv} className="px-4 py-2 rounded-lg text-xs border border-[hsl(var(--border))] hover:bg-[hsl(var(--bg-hover))] flex items-center gap-1.5">
+                <Download size={14} /> 导出 CSV
+              </button>
+            )}
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">超时 (ms)</label>
-          <SpinInput min={500} max={10000} step={500} value={timeout} onChange={v => setTimeout_(String(v))} className="w-24" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1">并发</label>
-          <SpinInput min={1} max={200} step={10} value={concurrency} onChange={v => setConcurrency(String(v))} className="w-20" />
-        </div>
-        <button onClick={handlePing} disabled={pinging} className={btnClass}>
-          {pinging ? "Ping 中..." : "开始 Ping"}
-        </button>
-        {results && (
-          <button onClick={exportCsv} className="px-4 py-2 rounded-lg text-xs border border-[hsl(var(--border))] hover:bg-[hsl(var(--bg-hover))] flex items-center gap-1.5">
-            <Download size={14} /> 导出 CSV
-          </button>
-        )}
       </div>
 
       {pinging && (
