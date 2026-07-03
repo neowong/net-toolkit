@@ -1,0 +1,59 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Compiled JS from TypeScript
+src/**/*.js
+
+# Claude Code
+.claude/
+**/.claude/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Runtime data and generated reports
+data/
+src-tauri/data/reports/
+release/
+
+# Stray files
+*.png
+!public/*.png
+!src-tauri/icons/*.png
+*.docx
+!src-tauri/data/default_template.docx
+*-snapshot.txt
+src-tauri/resources/ai-inspection
+src-tauri/resources/ip2region.xdb
+src-tauri/resources/ip2region_v4.xdb
+
+# stats-server build artifacts
+stats-server/ip2region_v4.xdb
+stats-server/package-lock.json
+stats-server/node_modules/

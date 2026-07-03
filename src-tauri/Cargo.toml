@@ -1,0 +1,65 @@
+[package]
+name = "inspection-rust"
+version = "3.58.0"
+edition = "2021"
+description = "AI巡检助手"
+
+[[bin]]
+name = "ai-inspection"
+path = "src/main.rs"
+
+[lib]
+name = "inspection_rust_lib"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-process = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = "0.4"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+fernet = "0.2"
+futures = "0.3"
+ssh2 = { version = "0.9", features = ["vendored-openssl"] }
+dirs = "6"
+parking_lot = "0.12"
+regex = "1"
+toml = "0.8"
+docx-rs = "0.4"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+indexmap = { version = "2", features = ["serde"] }
+digest = "0.10"
+md-5 = "0.10"
+sha1 = "0.10"
+sha2 = "0.10"
+hmac = "0.12"
+aes = "0.8"
+des = "0.8"
+cipher = "0.4"
+rand = "0.8"
+xdb-parse = "0.2"
+hostname = "0.4"
+os_info = "3"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[profile.release]
+opt-level = "z"        # optimize for size over speed
+lto = "fat"            # link-time optimization
+codegen-units = 1      # per-function optimization
+strip = "symbols"      # strip all symbols
+panic = "abort"        # remove unwind tables
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

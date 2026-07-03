@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /**
+   * 表格单元格内容截断 + 柔和渐变淡出。
+   * 内容溢出时（data-overflow="true"，由 JS 在鼠标进入时设置）启用 mask-image
+   * 让末端 24px 渐变到透明，比硬切的省略号更柔和；未溢出时显示普通省略号。
+   */
+  .table-cell-truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* 让 mask 渐变能在子节点（包括徽章/链接）上正常工作 */
+    -webkit-background-clip: padding-box;
+  }
+  @supports (mask-image: linear-gradient(black, black)) or (-webkit-mask-image: linear-gradient(black, black)) {
+    .table-cell-truncate[data-overflow="true"] {
+      text-overflow: clip;
+      mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    /* Sidebar & chrome (dark navy) */
+    --sidebar-bg: 222 47% 11%;
+    --sidebar-hover: 217 33% 17%;
+    --sidebar-active: 207 100% 24%;
+    --sidebar-text: 210 40% 80%;
+    --sidebar-text-muted: 215 25% 55%;
+
+    /* Content area (light slate) */
+    --bg-app: 210 40% 96%;
+    --bg-content: 210 40% 98%;
+    --bg-card: 0 0% 100%;
+    --bg-hover: 210 40% 96%;
+    --bg-active: 207 100% 96%;
+    --bg-input: 0 0% 100%;
+    --muted: 210 40% 96%;
+
+    /* Text */
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 19% 35%;
+    --text-tertiary: 215 14% 55%;
+
+    /* Brand accent (sky blue) */
+    --accent: 207 100% 32%;
+    --accent-foreground: 0 0% 100%;
+    --accent-subtle: 207 100% 95%;
+
+    /* Semantic */
+    --success: 160 84% 32%;
+    --warning: 36 100% 40%;
+    --danger: 0 72% 51%;
+    --info: 200 98% 39%;
+
+    /* Borders */
+    --border: 214 32% 91%;
+    --border-light: 210 40% 96%;
+
+    /* Radius */
+    --radius: 0.625rem;
+    --radius-sm: 0.375rem;
+    --radius-lg: 0.75rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  * { border-color: hsl(var(--border)); }
+
+  body {
+    background-color: hsl(var(--bg-content));
+    color: hsl(var(--text-primary));
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+      "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--text-tertiary) / 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-secondary) / 0.45); }
+
+/* Sidebar scrollbar (dark) */
+.sidebar-scroll::-webkit-scrollbar-thumb { background: hsl(var(--sidebar-text-muted) / 0.25); }
+.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--sidebar-text-muted) / 0.4); }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInOnly {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-in { animation: fadeIn .25s ease-out; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-4px); }
+  30%, 70% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+  border-color: hsl(var(--danger)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--danger) / 0.25) !important;
+}
