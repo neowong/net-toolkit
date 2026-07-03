@@ -1,38 +1,58 @@
-import { useMemo } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import {
   Calculator, Wifi, Plug, Route, Globe, Radio, Upload, FileText,
   Monitor, Search, Info,
 } from "lucide-react";
 
+import SubnetCalcPage from "../pages/SubnetCalcPage";
+import LiveScanPage from "../pages/LiveScanPage";
+import PortScanPage from "../pages/PortScanPage";
+import TraceroutePage from "../pages/TraceroutePage";
+import WebCheckPage from "../pages/WebCheckPage";
+import SnmpPage from "../pages/SnmpPage";
+import TftpPage from "../pages/TftpPage";
+import SyslogPage from "../pages/SyslogPage";
+import BatchPingPage from "../pages/BatchPingPage";
+import DnsQueryPage from "../pages/DnsQueryPage";
+import AboutPage from "../pages/AboutPage";
+
+type PageKey = "subnet" | "scanner" | "port" | "trace" | "web" | "snmp" | "tftp" | "syslog" | "ping" | "dns" | "about";
+
 interface NavItem {
-  key: string;
+  key: PageKey;
   label: string;
-  path: string;
   icon: typeof Calculator;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { key: "subnet",  label: "子网计算", path: "/subnet",  icon: Calculator },
-  { key: "scanner", label: "存活扫描", path: "/scanner", icon: Wifi },
-  { key: "port",    label: "端口检测", path: "/port",    icon: Plug },
-  { key: "trace",   label: "路由跟踪", path: "/trace",   icon: Route },
-  { key: "web",     label: "WEB检测",  path: "/web",     icon: Globe },
-  { key: "snmp",    label: "SNMP",     path: "/snmp",    icon: Radio },
-  { key: "tftp",    label: "TFTP服务",  path: "/tftp",    icon: Upload },
-  { key: "syslog",  label: "Syslog",   path: "/syslog",  icon: FileText },
-  { key: "ping",    label: "批量Ping",  path: "/ping",    icon: Monitor },
-  { key: "dns",     label: "DNS查询",   path: "/dns",     icon: Search },
+  { key: "subnet",  label: "子网计算", icon: Calculator },
+  { key: "scanner", label: "存活扫描", icon: Wifi },
+  { key: "port",    label: "端口检测", icon: Plug },
+  { key: "trace",   label: "路由跟踪", icon: Route },
+  { key: "web",     label: "WEB检测",  icon: Globe },
+  { key: "snmp",    label: "SNMP",     icon: Radio },
+  { key: "tftp",    label: "TFTP服务",  icon: Upload },
+  { key: "syslog",  label: "Syslog",   icon: FileText },
+  { key: "ping",    label: "批量Ping",  icon: Monitor },
+  { key: "dns",     label: "DNS查询",   icon: Search },
 ];
 
-export default function AppShell() {
-  const navigate = useNavigate();
-  const location = useLocation();
+const PAGES: Record<PageKey, JSX.Element> = {
+  subnet:  <SubnetCalcPage />,
+  scanner: <LiveScanPage />,
+  port:    <PortScanPage />,
+  trace:   <TraceroutePage />,
+  web:     <WebCheckPage />,
+  snmp:    <SnmpPage />,
+  tftp:    <TftpPage />,
+  syslog:  <SyslogPage />,
+  ping:    <BatchPingPage />,
+  dns:     <DnsQueryPage />,
+  about:   <AboutPage />,
+};
 
-  const activeKey = useMemo(
-    () => NAV_ITEMS.find(item => location.pathname.startsWith(item.path))?.key ?? null,
-    [location.pathname]
-  );
+export default function AppShell() {
+  const [active, setActive] = useState<PageKey>("subnet");
 
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "hsl(var(--bg-content))" }}>
@@ -55,15 +75,15 @@ export default function AppShell() {
           <nav className="flex-1 py-1.5 overflow-y-auto sidebar-scroll">
             <div className="px-1.5 space-y-px">
               {NAV_ITEMS.map(item => {
-                const active = activeKey === item.key;
+                const isActive = active === item.key;
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.key}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => setActive(item.key)}
                     className={`flex items-center gap-2.5 w-full select-none transition-all duration-150 rounded-md
-                      px-2.5 h-[30px] ${active ? "font-medium" : "hover:bg-[hsl(var(--sidebar-hover))]"}`}
-                    style={active
+                      px-2.5 h-[30px] ${isActive ? "font-medium" : "hover:bg-[hsl(var(--sidebar-hover))]"}`}
+                    style={isActive
                       ? { backgroundColor: "hsl(var(--sidebar-active))", color: "hsl(var(--accent-foreground))" }
                       : { color: "hsl(var(--sidebar-text-muted))" }
                     }
@@ -79,9 +99,13 @@ export default function AppShell() {
           {/* Bottom: About */}
           <div className="px-1.5 pb-1.5 border-t" style={{ borderColor: "hsl(var(--sidebar-hover))" }}>
             <button
-              onClick={() => navigate("/about")}
-              className="flex items-center gap-2.5 w-full px-2.5 h-[30px] mt-1 rounded-md text-[12px] transition-colors hover:bg-[hsl(var(--sidebar-hover))]"
-              style={{ color: "hsl(var(--sidebar-text-muted))" }}
+              onClick={() => setActive("about")}
+              className={`flex items-center gap-2.5 w-full px-2.5 h-[30px] mt-1 rounded-md text-[12px] transition-colors
+                ${active === "about" ? "font-medium" : "hover:bg-[hsl(var(--sidebar-hover))]"}`}
+              style={active === "about"
+                ? { backgroundColor: "hsl(var(--sidebar-active))", color: "hsl(var(--accent-foreground))" }
+                : { color: "hsl(var(--sidebar-text-muted))" }
+              }
             >
               <Info size={14} />
               <span>关于</span>
@@ -89,11 +113,13 @@ export default function AppShell() {
           </div>
         </aside>
 
-        {/* Content */}
+        {/* Content — 所有页面保持挂载，用 hidden 切换，保留状态 */}
         <main className="flex-1 overflow-auto" style={{ backgroundColor: "hsl(var(--bg-content))" }}>
-          <div className="animate-in p-4">
-            <Outlet />
-          </div>
+          {(Object.keys(PAGES) as PageKey[]).map(key => (
+            <div key={key} hidden={active !== key} className="animate-in p-4">
+              {PAGES[key]}
+            </div>
+          ))}
         </main>
       </div>
 
