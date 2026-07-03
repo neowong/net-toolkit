@@ -848,3 +848,24 @@ pub async fn batch_ping(
 
     Ok(results)
 }
+
+// ============================================================
+// DNS & Whois
+// ============================================================
+
+#[tauri::command]
+pub async fn dns_lookup(
+    domain: String,
+    record_type: String,
+) -> Result<services::dns_resolver::DnsResult, String> {
+    tracing::info!("DNS 查询: domain={}, type={}", domain, record_type);
+    services::dns_resolver::dns_lookup(&domain, &record_type).await
+}
+
+#[tauri::command]
+pub async fn whois_lookup(
+    domain: String,
+) -> Result<services::whois_client::WhoisResult, String> {
+    tracing::info!("Whois 查询: domain={}", domain);
+    services::whois_client::whois_lookup(&domain).await
+}

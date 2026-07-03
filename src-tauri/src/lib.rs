@@ -108,6 +108,8 @@ pub fn run() {
             commands::tools::start_syslog_server,
             commands::tools::stop_syslog_server,
             commands::tools::batch_ping,
+            commands::tools::dns_lookup,
+            commands::tools::whois_lookup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
