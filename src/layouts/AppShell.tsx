@@ -24,17 +24,32 @@ interface NavItem {
   icon: typeof Calculator;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { key: "subnet",  label: "子网计算", icon: Calculator },
-  { key: "scanner", label: "存活扫描", icon: Wifi },
-  { key: "port",    label: "端口检测", icon: Plug },
-  { key: "trace",   label: "路由跟踪", icon: Route },
-  { key: "web",     label: "WEB检测",  icon: Globe },
-  { key: "snmp",    label: "SNMP",     icon: Radio },
-  { key: "tftp",    label: "TFTP服务",  icon: Upload },
-  { key: "syslog",  label: "Syslog",   icon: FileText },
-  { key: "ping",    label: "批量Ping",  icon: Monitor },
-  { key: "dns",     label: "DNS查询",   icon: Search },
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: "查询计算",
+    items: [
+      { key: "subnet",  label: "子网计算", icon: Calculator },
+      { key: "dns",     label: "DNS查询",  icon: Search },
+    ],
+  },
+  {
+    label: "网络探测",
+    items: [
+      { key: "scanner", label: "存活扫描", icon: Wifi },
+      { key: "port",    label: "端口检测", icon: Plug },
+      { key: "trace",   label: "路由跟踪", icon: Route },
+      { key: "ping",    label: "批量Ping", icon: Monitor },
+    ],
+  },
+  {
+    label: "协议工具",
+    items: [
+      { key: "web",    label: "WEB检测",  icon: Globe },
+      { key: "snmp",   label: "SNMP",     icon: Radio },
+      { key: "tftp",   label: "TFTP服务",  icon: Upload },
+      { key: "syslog", label: "Syslog",   icon: FileText },
+    ],
+  },
 ];
 
 const PAGES: Record<PageKey, JSX.Element> = {
@@ -73,27 +88,35 @@ export default function AppShell() {
 
           {/* Navigation */}
           <nav className="flex-1 py-1.5 overflow-y-auto sidebar-scroll">
-            <div className="px-1.5 space-y-px">
-              {NAV_ITEMS.map(item => {
-                const isActive = active === item.key;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => setActive(item.key)}
-                    className={`flex items-center gap-2.5 w-full select-none transition-all duration-150 rounded-md
-                      px-2.5 h-[30px] ${isActive ? "font-medium" : "hover:bg-[hsl(var(--sidebar-hover))]"}`}
-                    style={isActive
-                      ? { backgroundColor: "hsl(var(--sidebar-active))", color: "hsl(var(--accent-foreground))" }
-                      : { color: "hsl(var(--sidebar-text-muted))" }
-                    }
-                  >
-                    <Icon size={14} className="shrink-0" />
-                    <span className="text-[12px] truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {NAV_GROUPS.map((group, gi) => (
+              <div key={gi} className={gi > 0 ? "mt-2.5" : ""}>
+                <div className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: "hsl(var(--sidebar-text-muted) / 0.6)" }}>
+                  {group.label}
+                </div>
+                <div className="px-1.5 space-y-px">
+                  {group.items.map(item => {
+                    const isActive = active === item.key;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => setActive(item.key)}
+                        className={`flex items-center gap-2.5 w-full select-none transition-all duration-150 rounded-md
+                          px-2.5 h-[30px] ${isActive ? "font-medium" : "hover:bg-[hsl(var(--sidebar-hover))]"}`}
+                        style={isActive
+                          ? { backgroundColor: "hsl(var(--sidebar-active))", color: "hsl(var(--accent-foreground))" }
+                          : { color: "hsl(var(--sidebar-text-muted))" }
+                        }
+                      >
+                        <Icon size={14} className="shrink-0" />
+                        <span className="text-[12px] truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Bottom: About */}
