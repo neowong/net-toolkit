@@ -867,3 +867,167 @@ pub async fn whois_lookup(
     tracing::info!("Whois 查询: domain={}", domain);
     services::whois_client::whois_lookup(&domain).await
 }
+
+// ============================================================
+// 版本检查 & 匿名统计
+// ============================================================
+
+/// 获取应用版本号
+#[tauri::command]
+pub fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// 获取操作系统信息
+#[tauri::command]
+pub fn get_os_info() -> serde_json::Value {
+    let info = os_info::get();
+    serde_json::json!({
+        "os": info.os_type().to_string(),
+        "os_version": info.version().to_string(),
+    })
+}
+
+/// 检查 GitHub Releases 是否有新版本
+#[tauri::command]
+pub async fn check_update(
+    current_version: String,
+) -> Result<Option<serde_json::Value>, String> {
+    let url = "https://api.github.com/repos/neowong/net-toolkit/releases/latest";
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .user_agent("net-toolkit-update-check")
+        .build()
+        .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
+
+    let resp = client.get(url).send().await
+        .map_err(|e| format!("检查更新失败: {}", e))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("检查更新失败，HTTP {}", resp.status()));
+    }
+
+    let release: serde_json::Value = resp.json().await
+        .map_err(|e| format!("解析更新信息失败: {}", e))?;
+
+    let latest_tag = release.get("tag_name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .trim_start_matches("internal-")
+        .trim_start_matches('v')
+        .to_string();
+
+    let current = current_version.trim_start_matches('v');
+
+    let latest_parts: Vec<u32> = latest_tag.split('.').filter_map(|s| s.parse().ok()).collect();
+    let current_parts: Vec<u32> = current.split('.').filter_map(|s| s.parse().ok()).collect();
+
+    let has_update = latest_parts > current_parts;
+
+    if has_update {
+        let html_url = release.get("html_url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let body = release.get("body")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        Ok(Some(serde_json::json!({
+            "version": latest_tag,
+            "url": html_url,
+            "body": body,
+        })))
+    } else {
+        Ok(None)
+    }
+}
+
+/// 获取本机 MAC 地址
+fn get_mac_address() -> Option<String> {
+    #[cfg(target_os = "linux")]
+    {
+        std::fs::read_dir("/sys/class/net").ok()?
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                name != "lo" && !name.starts_with("docker") && !name.starts_with("br-")
+            })
+            .filter_map(|entry| {
+                let path = entry.path().join("address");
+                std::fs::read_to_string(path).ok().map(|s| s.trim().to_string())
+            })
+            .next()
+    }
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        std::process::Command::new("ipconfig")
+            .args(["/all"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .ok()
+            .and_then(|output| {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                stdout.lines()
+                    .find(|line| line.contains("Physical Address") || line.contains("物理地址"))
+                    .and_then(|line| {
+                        line.split(':').last().map(|s| s.trim().replace('-', ":"))
+                    })
+            })
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    {
+        None
+    }
+}
+
+/// 生成匿名设备 ID (SHA-256 hash of hostname:mac)
+fn generate_device_id() -> String {
+    let hostname = hostname::get()
+        .map(|h| h.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let mac = get_mac_address().unwrap_or_default();
+    let raw = format!("{}:{}", hostname, mac);
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update(raw.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+/// 提交匿名使用统计（静默，失败忽略）
+#[tauri::command]
+pub async fn submit_anonymous_stats() -> Result<(), String> {
+    let device_id = generate_device_id();
+    let os_info = os_info::get();
+    let version = env!("CARGO_PKG_VERSION").to_string();
+
+    let payload = serde_json::json!({
+        "device_id": &device_id,
+        "version": &version,
+        "os": os_info.os_type().to_string(),
+        "os_version": os_info.version().to_string(),
+    });
+
+    tracing::info!("[stats] 匿名统计上报: device_id={}...", &device_id[..8]);
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
+
+    let resp = client.post("https://neowong.eu.org/stats/api/track")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("上报失败: {}", e))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("上报失败，HTTP {}", resp.status()));
+    }
+
+    tracing::info!("[stats] 匿名统计上报成功");
+    Ok(())
+}

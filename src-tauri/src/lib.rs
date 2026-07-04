@@ -96,6 +96,14 @@ pub fn run() {
                     tracing::info!("ip2region_v4.xdb 未找到，路由跟踪归属地不可用");
                 }
             }
+            // 启动时静默上报匿名统计（延迟 5s，不阻塞窗口加载）
+            tokio::spawn(async {
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                if let Err(e) = commands::tools::submit_anonymous_stats().await {
+                    tracing::debug!("[stats] 匿名统计上报失败（可忽略）: {}", e);
+                }
+            });
+
             Ok(())
         })
         .manage(state)
@@ -116,6 +124,10 @@ pub fn run() {
             commands::tools::batch_ping,
             commands::tools::dns_lookup,
             commands::tools::whois_lookup,
+            commands::tools::get_app_version,
+            commands::tools::get_os_info,
+            commands::tools::check_update,
+            commands::tools::submit_anonymous_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

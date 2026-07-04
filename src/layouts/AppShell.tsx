@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   Calculator, Wifi, Plug, Route, Globe, Radio, Upload, FileText,
   Monitor, Search, Info,
@@ -68,6 +69,16 @@ const PAGES: Record<PageKey, JSX.Element> = {
 
 export default function AppShell() {
   const [active, setActive] = useState<PageKey>("subnet");
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+
+  // 启动时检查版本更新
+  useEffect(() => {
+    invoke<string>("get_app_version").then(ver => {
+      return invoke<{ version: string; url: string } | null>("check_update", { currentVersion: ver });
+    }).then(result => {
+      if (result) setUpdateVersion(result.version);
+    }).catch(() => { /* 静默忽略 */ });
+  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "hsl(var(--bg-content))" }}>
@@ -155,6 +166,16 @@ export default function AppShell() {
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "hsl(var(--success))" }} />
           就绪
         </span>
+        {updateVersion && (
+          <button
+            onClick={() => setActive("about")}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium hover:opacity-80 transition-opacity"
+            style={{ backgroundColor: "hsl(var(--accent) / 0.15)", color: "hsl(var(--accent))" }}
+            title="点击查看详情"
+          >
+            🆕 v{updateVersion}
+          </button>
+        )}
         <span className="flex-1" />
         <span>v1.0.0</span>
       </footer>
