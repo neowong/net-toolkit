@@ -1018,7 +1018,7 @@ pub async fn submit_anonymous_stats() -> Result<(), String> {
         .build()
         .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
 
-    let resp = client.post("https://neowong.eu.org/stats/api/track")
+    let resp = client.post("https://neowong.eu.org/nettoolkit-stats/api/track")
         .json(&payload)
         .send()
         .await

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetToolKit - 统计 Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+    /* 初始隐藏，避免 token 校验时的登录框闪烁 */
+    #loginPage, #dashboardPage { display: none; }
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh; /* 动态视口，手机浏览器地址栏适配 */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 16px;
+    }
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-box h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+      font-size: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px; /* 避免 iOS 缩放 */
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn:hover { background: #5568d3; }
+    .error {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .dashboard {
+      display: none;
+      padding: 12px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .header h1 { font-size: 18px; color: #333; white-space: nowrap; }
+    .header .user-info { display: flex; align-items: center; gap: 12px; }
+    .header .username { color: #666; font-size: 13px; }
+    .header .logout-btn {
+      padding: 6px 12px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 4px 0;
+    }
+    .stat-card .label {
+      color: #666;
+      font-size: 12px;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .chart-card {
+      background: white;
+      padding: 14px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .chart-card h3 {
+      margin-bottom: 10px;
+      color: #333;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .chart-card canvas { max-height: 280px; }
+    .recent-table {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow-x: auto;
+    }
+    .recent-table h3 {
+      padding: 12px 16px;
+      margin: 0;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .recent-table table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    .recent-table th, .recent-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+    .recent-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap;
+    }
+    .recent-table tr:hover { background: #f8f9fa; }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-windows { background: #e3f2fd; color: #1976d2; }
+    .badge-linux { background: #e8f5e9; color: #388e3c; }
+    .badge-unknown { background: #f3e5f5; color: #7b1fa2; }
+    .status-select {
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      min-width: 72px;
+    }
+    .status-pending { background: #fff3e0; color: #e65100; }
+    .status-in_progress { background: #e3f2fd; color: #1565c0; }
+    .status-fixed { background: #e8f5e9; color: #2e7d32; }
+    .status-wontfix { background: #fce4ec; color: #c62828; }
+    .note-input {
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      border: 1px solid #ddd;
+      background: #fff;
+      width: 100px;
+    }
+    .note-input:focus { border-color: #667eea; outline: none; }
+    .btn-del {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      border: none;
+      background: #ff5252;
+      color: #fff;
+      cursor: pointer;
+    }
+    .btn-del:hover { background: #d32f2f; }
+    /* 删除确认模态框 */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center; align-items: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px 28px;
+      max-width: 380px; width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      text-align: center;
+    }
+    .modal-box h4 { margin: 0 0 10px; font-size: 16px; }
+    .modal-box p { margin: 0 0 20px; font-size: 14px; color: #666; }
+    .modal-box .modal-btns { display: flex; gap: 10px; justify-content: center; }
+    .modal-box .btn-cancel {
+      padding: 6px 18px; border-radius: 6px; border: 1px solid #ddd;
+      background: #fff; cursor: pointer; font-size: 13px;
+    }
+    .modal-box .btn-danger {
+      padding: 6px 18px; border-radius: 6px; border: none;
+      background: #ff5252; color: #fff; cursor: pointer; font-size: 13px;
+    }
+    .modal-box .btn-danger:hover { background: #d32f2f; }
+
+    /* ── 平板（≤1024px）: 统计4列→2列 ── */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── 手机（≤640px）: 统计2列、图表堆叠、头部折叠 ── */
+    @media (max-width: 640px) {
+      .dashboard { padding: 6px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .header h1 { font-size: 15px; }
+      .header .user-info { width: 100%; justify-content: space-between; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .stat-card { padding: 10px 8px; }
+      .stat-card .value { font-size: 20px; }
+      .stat-card .label { font-size: 11px; }
+      .charts-grid { gap: 8px; }
+      .chart-card { padding: 8px; }
+      .chart-card h3 { font-size: 12px; margin-bottom: 6px; }
+      .chart-card canvas { max-height: 180px; }
+      .recent-table table { min-width: 500px; }
+      .recent-table th, .recent-table td { padding: 5px 6px; font-size: 11px; }
+      .login-box { padding: 24px 20px; margin: 0; }
+      .login-box h1 { font-size: 20px; margin-bottom: 20px; }
+    }
+
+    /* ── 小手机（≤400px）: 统计1列 ── */
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 13px; }
+      .recent-table table { min-width: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载中 -->
+  <div id="loadingPage" class="loading-container">
+    <p style="color:#999;font-size:16px;">加载中...</p>
+  </div>
+  <!-- 登录页面 -->
+  <div id="loginPage" class="login-container">
+    <div class="login-box">
+      <h1>🔐 登录</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="username" placeholder="输入用户名" required>
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="password" placeholder="输入密码" required>
+        </div>
+        <button type="submit" class="btn">登录</button>
+        <div id="loginError" class="error" style="display:none;"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboardPage" class="dashboard">
+    <div class="header">
+      <h1>📊 NetToolKit - 统计 Dashboard</h1>
+      <div class="user-info">
+        <span class="username" id="currentUser"></span>
+        <button class="logout-btn" onclick="logout()">退出</button>
+      </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">总用户数</div>
+        <div class="value" id="totalUsers">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">今日活跃</div>
+        <div class="value" id="todayUsers">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">本周活跃</div>
+        <div class="value" id="weekUsers">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">本月活跃</div>
+        <div class="value" id="monthUsers">-</div>
+      </div>
+    </div>
+
+    <!-- 每日活跃用户（全宽） -->
+    <div class="chart-card" style="margin-bottom: 12px;">
+      <h3>📈 每日活跃用户（最近30天）</h3>
+      <div style="height: 150px;">
+        <canvas id="dailyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 版本分布 + 操作系统分布（并排） -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>📦 版本分布</h3>
+        <div style="height: 180px;">
+          <canvas id="versionChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>💻 操作系统分布</h3>
+        <div style="height: 180px;">
+          <canvas id="osChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近记录 -->
+    <div class="recent-table">
+      <h3>📋 最近上报记录</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>设备ID</th>
+            <th>版本</th>
+            <th>系统</th>
+            <th>IP</th>
+            <th>归属地</th>
+            <th>时间</th>
+          </tr>
+        </thead>
+        <tbody id="recentTable"></tbody>
+      </table>
+    </div>
+
+    <!-- 反馈列表 -->
+    <div class="recent-table" style="margin-top: 20px;">
+      <h3>💬 用户反馈</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>类型</th>
+            <th>标题</th>
+            <th>内容</th>
+            <th>系统</th>
+            <th>版本</th>
+            <th>状态</th>
+            <th>备注</th>
+            <th>时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="feedbackTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // 自动检测 BASE_PATH：页面从哪里加载，API 就在同一路径下
+    // /stats/ → /stats,  /stats/index.html → /stats,  / → (root)
+    const p = window.location.pathname.replace(/\/$/, '');
+    const dir = p.includes('.') ? p.substring(0, p.lastIndexOf('/')) : p;
+    const API_BASE = window.location.origin + (dir || '');
+    let token = localStorage.getItem('token');
+
+    // 检查登录状态
+    if (token) {
+      verifyToken();
+    } else {
+      document.getElementById('loadingPage').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'flex';
+    }
+
+    // 登录表单提交
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('loginError');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.textContent = data.error || '登录失败';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        token = data.token;
+        localStorage.setItem('token', token);
+        localStorage.setItem('username', data.username);
+        showDashboard();
+      } catch (err) {
+        errorEl.textContent = '网络错误';
+        errorEl.style.display = 'block';
+      }
+    });
+
+    // 验证令牌
+    async function verifyToken() {
+      try {
+        const res = await fetch(`${API_BASE}/api/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          document.getElementById('loadingPage').style.display = 'none';
+          showDashboard();
+        } else {
+          document.getElementById('loadingPage').style.display = 'none';
+          document.getElementById('loginPage').style.display = 'flex';
+          localStorage.removeItem('token');
+          localStorage.removeItem('username');
+        }
+      } catch (err) {
+        document.getElementById('loadingPage').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+      }
+    }
+
+    // 显示 Dashboard
+    function showDashboard() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').style.display = 'block';
+      document.getElementById('currentUser').textContent = localStorage.getItem('username') || 'root';
+      loadStats();
+    }
+
+    // 退出登录
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      token = null;
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('dashboardPage').style.display = 'none';
+    }
+
+    // 加载统计数据
+    async function loadStats() {
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      try {
+        // 并行加载所有数据
+        const [overview, versions, os, daily, recent, feedbacks] = await Promise.all([
+          fetch(`${API_BASE}/api/stats/overview`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE}/api/stats/versions`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE}/api/stats/os`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE}/api/stats/daily`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE}/api/stats/recent?limit=20`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE}/api/feedbacks?limit=50`, { headers }).then(r => r.json()),
+        ]);
+
+        // 更新统计卡片
+        document.getElementById('totalUsers').textContent = overview.totalUsers || 0;
+        document.getElementById('todayUsers').textContent = overview.todayUsers || 0;
+        document.getElementById('weekUsers').textContent = overview.weekUsers || 0;
+        document.getElementById('monthUsers').textContent = overview.monthUsers || 0;
+
+        // 渲染图表
+        renderDailyChart(daily);
+        renderVersionChart(versions);
+        renderOsChart(os);
+
+        // 渲染表格
+        renderRecentTable(recent);
+        renderFeedbackTable(feedbacks);
+      } catch (err) {
+        console.error('加载统计数据失败:', err);
+      }
+    }
+
+    // 每日活跃用户图表
+    let dailyChartInstance = null;
+    function renderDailyChart(data) {
+      const ctx = document.getElementById('dailyChart').getContext('2d');
+      if (dailyChartInstance) {
+        dailyChartInstance.destroy();
+      }
+      dailyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => d.date.slice(5)), // 只显示月-日
+          datasets: [{
+            label: '活跃用户',
+            data: data.map(d => d.users),
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 2,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } }
+          }
+        }
+      });
+    }
+
+    // 版本分布图表
+    let versionChartInstance = null;
+    function renderVersionChart(data) {
+      const ctx = document.getElementById('versionChart').getContext('2d');
+      if (versionChartInstance) {
+        versionChartInstance.destroy();
+      }
+      const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140', '#30cfd0'];
+      versionChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.map(d => `v${d.version}`),
+          datasets: [{
+            data: data.map(d => d.users),
+            backgroundColor: colors.slice(0, data.length)
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8 } }
+          }
+        }
+      });
+    }
+
+    // 操作系统分布图表
+    let osChartInstance = null;
+    function renderOsChart(data) {
+      const ctx = document.getElementById('osChart').getContext('2d');
+      if (osChartInstance) {
+        osChartInstance.destroy();
+      }
+      const colors = { windows: '#1976d2', linux: '#388e3c', unknown: '#9e9e9e' };
+      osChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.map(d => d.os),
+          datasets: [{
+            data: data.map(d => d.users),
+            backgroundColor: data.map(d => colors[d.os] || '#9e9e9e')
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8 } }
+          }
+        }
+      });
+    }
+
+    // 最近记录表格
+    function renderRecentTable(data) {
+      const tbody = document.getElementById('recentTable');
+      tbody.innerHTML = data.map(row => `
+        <tr>
+          <td><code>${row.device_id.slice(0, 16)}...</code></td>
+          <td>v${row.version}</td>
+          <td><span class="badge badge-${row.os}">${row.os}</span></td>
+          <td>${row.ip || '-'}</td>
+          <td style="font-size:12px;color:#666;">${row.ip_region || '-'}</td>
+          <td>${new Date(row.timestamp).toLocaleString('zh-CN')}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 反馈表格
+    const TYPE_LABELS = { bug: '问题反馈', feature: '功能需求', other: '其他' };
+    const TYPE_COLORS = { bug: '#e74c3c', feature: '#3498db', other: '#95a5a6' };
+
+    function renderFeedbackTable(data) {
+      const tbody = document.getElementById('feedbackTable');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px;">暂无反馈</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(row => {
+        let osStr = '-';
+        if (row.os) {
+          osStr = row.os;
+          if (row.os_version && row.os_version !== 'Unknown') osStr += ' ' + row.os_version;
+        }
+        const STATUS_LABELS = { pending: '待处理', in_progress: '处理中', fixed: '已修复', wontfix: '不修复' };
+        const status = row.status || 'pending';
+        return `
+        <tr>
+          <td>
+            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;background:${TYPE_COLORS[row.feedback_type] || '#95a5a6'}22;color:${TYPE_COLORS[row.feedback_type] || '#95a5a6'}">
+              ${TYPE_LABELS[row.feedback_type] || row.feedback_type}
+            </span>
+          </td>
+          <td style="font-weight:500">${row.title}</td>
+          <td style="max-width:220px;white-space:pre-wrap;word-break:break-all">${row.content}</td>
+          <td style="font-size:12px;">${osStr}</td>
+          <td style="font-size:12px;">${row.version ? 'v' + row.version : '-'}</td>
+          <td>
+            <select class="status-select status-${status}" onchange="updateFeedbackStatus(${row.id}, this.value)" title="修改状态">
+              <option value="pending" ${status==='pending'?'selected':''}>待处理</option>
+              <option value="in_progress" ${status==='in_progress'?'selected':''}>处理中</option>
+              <option value="fixed" ${status==='fixed'?'selected':''}>已修复</option>
+              <option value="wontfix" ${status==='wontfix'?'selected':''}>不修复</option>
+            </select>
+          </td>
+          <td>
+            <input class="note-input" value="${(row.note || '').replace(/"/g, '&quot;')}" placeholder="备注..." onblur="updateFeedbackNote(${row.id}, this.value)" />
+          </td>
+          <td style="font-size:12px;color:#999;">${new Date(row.created_at).toLocaleString('zh-CN')}</td>
+          <td>
+            <button class="btn-del" onclick="showDeleteConfirm(${row.id})" title="删除">✕</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateFeedbackStatus(id, status) {
+      fetch(`${API_BASE}/api/feedbacks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      }).catch(() => {});
+    }
+
+    function updateFeedbackNote(id, note) {
+      fetch(`${API_BASE}/api/feedbacks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+      }).catch(() => {});
+    }
+
+    let deleteTargetId = null;
+    function showDeleteConfirm(id) {
+      deleteTargetId = id;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function hideDeleteModal() {
+      deleteTargetId = null;
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+    function confirmDelete() {
+      if (!deleteTargetId) return;
+      const id = deleteTargetId;
+      hideDeleteModal();
+      fetch(`${API_BASE}/api/feedbacks/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(data => {
+        if (data.success) loadStats();
+        else alert('删除失败: ' + (data.error || '未知错误'));
+      }).catch(e => {
+        alert('删除请求失败: ' + e.message);
+      });
+    }
+  </script>
+  <!-- 删除确认模态框 -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-box">
+      <h4>确认删除</h4>
+      <p>确定要删除这条反馈吗？此操作不可撤销。</p>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="hideDeleteModal()">取消</button>
+        <button class="btn-danger" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
