@@ -97,11 +97,14 @@ pub fn run() {
                 }
             }
             // 启动时静默上报匿名统计（延迟 5s，不阻塞窗口加载）
-            tokio::spawn(async {
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                if let Err(e) = commands::tools::submit_anonymous_stats().await {
-                    tracing::debug!("[stats] 匿名统计上报失败（可忽略）: {}", e);
-                }
+            std::thread::spawn(|| {
+                std::thread::sleep(std::time::Duration::from_secs(5));
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async {
+                    if let Err(e) = commands::tools::submit_anonymous_stats().await {
+                        tracing::debug!("[stats] 匿名统计上报失败（可忽略）: {}", e);
+                    }
+                });
             });
 
             Ok(())
