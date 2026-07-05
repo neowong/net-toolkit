@@ -6,28 +6,28 @@ IT 运维桌面工具箱 — 10 个常用网络工具，开箱即用。
 
 ## 功能
 
-| 工具 | 说明 |
-|------|------|
-| 子网计算 | IPv4/IPv6 子网计算，二进制展示 |
-| 存活扫描 | ping + TCP 后备探测，实时结果 |
-| 端口检测 | TCP/UDP 端口扫描，常用端口预设 |
-| 路由跟踪 | 系统 traceroute + 离线 IP 归属地 |
-| WEB 检测 | HTTP 健康检查，批量 URL |
-| SNMP | v2c/v3 GET 查询，常见 OID 预设 |
-| TFTP 服务 | 内置 TFTP 服务器，支持上传/下载 |
-| Syslog | UDP Syslog 实时接收 |
-| 批量 Ping | 并发 ping，延迟图表，CSV 导出 |
-| DNS / Whois | A/AAAA/MX/NS/TXT/SOA/SRV/PTR/CAA + Whois |
+| 工具 | 说明 | 实时显示 |
+|------|------|---------|
+| 子网计算 | IPv4/IPv6 子网计算，二进制展示 | - |
+| 存活扫描 | ping + TCP 后备探测 | ✅ |
+| 端口检测 | TCP/UDP 端口扫描，常用端口预设 | ✅ |
+| 路由跟踪 | 系统 traceroute + 离线 IP 归属地 | ✅ |
+| WEB 检测 | HTTP 健康检查，批量 URL | ✅ |
+| SNMP | v2c/v3 GET 查询，常见 OID 预设 | - |
+| TFTP 服务 | 内置 TFTP 服务器，支持上传/下载 | ✅ |
+| Syslog | UDP Syslog 实时接收 | ✅ |
+| 批量 Ping | 并发 ping，延迟图表，CSV 导出 | ✅ |
+| DNS / Whois | A/AAAA/MX/NS/TXT/SOA/SRV/PTR/CAA + Whois | - |
 
 ## 下载
 
-从 [Releases](https://github.com/neowong/net-toolkit/releases) 下载对应平台的安装包：
+从 [Releases](https://github.com/neowong/net-toolkit/releases/latest) 下载对应平台的安装包：
 
-| 平台 | 格式 |
-|------|------|
-| macOS (Apple Silicon) | `.dmg` |
-| Ubuntu / Debian | `.deb` |
-| Windows | `.msi` |
+| 平台 | 格式 | 文件 |
+|------|------|------|
+| macOS (Apple Silicon) | `.dmg` | `NetToolKit_*_aarch64.dmg` |
+| Ubuntu / Debian | `.deb` | `NetToolKit_*_amd64.deb` |
+| Windows | `.msi` | `NetToolKit_*_x64_en-US.msi` |
 
 ## 开发
 
@@ -74,6 +74,22 @@ net-toolkit/
 │   └── Cargo.toml
 └── .github/workflows/            # CI/CD
 ```
+
+## 更新日志
+
+### v1.1.0 (2026-07-05)
+
+- 前端 UI 优化：统一样式、增强组件复用
+- WEB 检测支持实时显示结果
+- 添加更新检查和匿名使用统计
+- 状态栏显示动态版本号
+- 性能优化：使用 useMemo 缓存计算
+
+### v1.0.0 (2026-03-01)
+
+- 初始发布
+- 10 个网络工具
+- 跨平台支持 (macOS/Linux/Windows)
 
 ## 许可证
 
