@@ -313,11 +313,14 @@ fn run_traceroute_stream(
     use std::process::Command;
 
     let (program, args) = if cfg!(target_os = "windows") {
-        ("tracert", vec![
-            "-d".to_string(),
-            "-h".to_string(), max_hops.to_string(),
-            "-w".to_string(), timeout_ms.to_string(),
-            target.to_string(),
+        // Windows: 使用 PowerShell 执行 tracert，并设置 UTF-8 编码
+        ("powershell", vec![
+            "-NoProfile".to_string(),
+            "-Command".to_string(),
+            format!(
+                "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; tracert -d -h {} -w {} {}",
+                max_hops, timeout_ms, target
+            ),
         ])
     } else {
         let secs = timeout_ms.div_ceil(1000);
@@ -340,6 +343,8 @@ fn run_traceroute_stream(
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x08000000;
         cmd.creation_flags(CREATE_NO_WINDOW);
+        // 设置控制台代码页为 UTF-8 (65001)
+        cmd.env("PYTHONIOENCODING", "utf-8");
     }
     cmd.stdout(std::process::Stdio::piped());
     cmd.stderr(std::process::Stdio::piped());
