@@ -53,15 +53,57 @@ const DOT_COLORS: Record<string, string> = {
   partially_completed: "bg-[hsl(var(--warning))]",
 };
 
-export default function StatusBadge({ status }: { status: Status }) {
+interface StatusBadgeProps {
+  status: Status;
+  /** 自定义标签文本 */
+  label?: string;
+  /** 是否显示圆点，默认 true */
+  showDot?: boolean;
+  /** 额外类名 */
+  className?: string;
+}
+
+export default function StatusBadge({
+  status,
+  label,
+  showDot = true,
+  className = "",
+}: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${STYLES[status]}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${STYLES[status]} ${className}`}
     >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${DOT_COLORS[status]}`}
-      />
-      {LABELS[status]}
+      {showDot && (
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${DOT_COLORS[status]}`}
+        />
+      )}
+      {label ?? LABELS[status]}
+    </span>
+  );
+}
+
+/**
+ * 简单的文本状态徽章（无背景，仅颜色）
+ * 用于表格内联显示
+ */
+export function StatusText({
+  status,
+  children,
+}: {
+  status: "success" | "danger" | "warning" | "info";
+  children: React.ReactNode;
+}) {
+  const colorClass = {
+    success: "text-[hsl(var(--success))]",
+    danger: "text-[hsl(var(--danger))]",
+    warning: "text-[hsl(var(--warning))]",
+    info: "text-[hsl(var(--info))]",
+  }[status];
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${colorClass}`}>
+      {children}
     </span>
   );
 }

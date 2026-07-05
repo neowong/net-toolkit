@@ -97,12 +97,20 @@ pub async fn scan_udp_ports(
 
 #[tauri::command]
 pub async fn check_web_urls(
+    app_handle: tauri::AppHandle,
     urls: Vec<String>,
     timeout_secs: u64,
 ) -> Result<Vec<services::web_checker::WebCheckResult>, String> {
     tracing::info!("WEB 检测开始: urls={}, timeout={}s", urls.len(), timeout_secs);
     let start = std::time::Instant::now();
-    let result = services::web_checker::check_urls(&urls, timeout_secs).await;
+
+    let app = app_handle.clone();
+    let result = services::web_checker::check_urls_with_callback(&urls, timeout_secs, move |r| {
+        // 每检测完一个 URL 立即推事件给前端
+        let _ = app.emit("web-check-result", r);
+    })
+    .await;
+
     let latency = start.elapsed().as_millis();
     tracing::info!("WEB 检测完成: urls={}, results={}, latency={}ms", urls.len(), result.len(), latency);
     Ok(result)

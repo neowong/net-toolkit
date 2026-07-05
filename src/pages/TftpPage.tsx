@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
-
-// ---- Shared styles ----------------------------------------------------------
-
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
-const labelClass = "block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1";
+import { btnClass, labelClass } from "../lib/styles";
 
 // ---- TFTP Server ------------------------------------------------------------
 
@@ -126,7 +122,7 @@ function TftpServer() {
 export default function TftpPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">TFTP服务</h1>
+      <h1 className="text-sm font-semibold mb-3">TFTP服务</h1>
       <TftpServer />
     </div>
   );

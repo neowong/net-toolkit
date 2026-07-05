@@ -70,10 +70,12 @@ const PAGES: Record<PageKey, JSX.Element> = {
 export default function AppShell() {
   const [active, setActive] = useState<PageKey>("subnet");
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<string>("");
 
-  // 启动时检查版本更新
+  // 启动时获取版本号并检查更新
   useEffect(() => {
     invoke<string>("get_app_version").then(ver => {
+      setCurrentVersion(ver);
       return invoke<{ version: string; url: string } | null>("check_update", { currentVersion: ver });
     }).then(result => {
       if (result) setUpdateVersion(result.version);
@@ -177,7 +179,7 @@ export default function AppShell() {
           </button>
         )}
         <span className="flex-1" />
-        <span>v1.0.0</span>
+        <span>{currentVersion ? `v${currentVersion}` : ''}</span>
       </footer>
     </div>
   );

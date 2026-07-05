@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 // ---- Subnet Calculator ------------------------------------------------------
 
@@ -161,8 +161,8 @@ function SubnetCalc() {
   const [result, setResult] = useState<SubnetResult | null>(null);
   const [error, setError] = useState("");
 
-  const isV6 = ip.trim().includes(":");
-  const maxCidr = isV6 ? 128 : 32;
+  const isV6 = useMemo(() => ip.trim().includes(":"), [ip]);
+  const maxCidr = useMemo(() => isV6 ? 128 : 32, [isV6]);
 
   const handleCalc = () => {
     setError("");
@@ -249,7 +249,7 @@ function SubnetCalc() {
 export default function SubnetCalcPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">子网计算器</h1>
+      <h1 className="text-sm font-semibold mb-3">子网计算器</h1>
       <SubnetCalc />
     </div>
   );

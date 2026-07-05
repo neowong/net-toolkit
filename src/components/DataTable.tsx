@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode, MouseEvent } from "react";
+import { Loader2 } from "lucide-react";
 
 interface Column<T> {
   key: string;
@@ -23,7 +24,15 @@ interface Props<T> {
   onRowClick?: (row: T) => void;
   selectedKey?: string | number | null;
   emptyText?: string;
+  /** 空状态图标 */
+  emptyIcon?: ReactNode;
+  /** 加载状态 */
+  loading?: boolean;
+  /** 加载提示文本 */
+  loadingText?: string;
   className?: string;
+  /** 最大高度，默认 60vh */
+  maxHeight?: string;
 }
 
 /**
@@ -50,6 +59,10 @@ export default function DataTable<T>({
   selectedKey,
   className,
   emptyText = "暂无数据",
+  emptyIcon,
+  loading = false,
+  loadingText = "加载中...",
+  maxHeight = "60vh",
 }: Props<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +95,7 @@ export default function DataTable<T>({
 
   return (
     <div ref={containerRef} className="border border-[hsl(var(--border))] rounded-lg overflow-hidden">
-      <div className="overflow-auto max-h-[60vh]">
+      <div className="overflow-auto" style={{ maxHeight }}>
         <table className={`w-full text-sm ${className ?? ""}`}>
           <thead>
             <tr className="bg-[hsl(var(--bg-hover))] sticky top-0 z-10">
@@ -98,13 +111,28 @@ export default function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {loading ? (
               <tr>
                 <td
                   colSpan={columns.length}
                   className="text-center py-12 text-sm text-[hsl(var(--text-tertiary))]"
                 >
-                  {emptyText}
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 size={20} className="animate-spin text-[hsl(var(--accent))]" />
+                    <span>{loadingText}</span>
+                  </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="text-center py-12 text-sm text-[hsl(var(--text-tertiary))]"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    {emptyIcon}
+                    <span>{emptyText}</span>
+                  </div>
                 </td>
               </tr>
             ) : (

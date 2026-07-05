@@ -35,7 +35,7 @@ export default function AboutPage() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-sm font-semibold">关于</h1>
+      <h1 className="text-sm font-semibold mb-3">关于</h1>
 
       {/* 更新横幅 */}
       {updateInfo && (

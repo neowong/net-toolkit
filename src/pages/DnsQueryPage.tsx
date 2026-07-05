@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Copy, Check } from "lucide-react";
+import { inputClass, btnClass } from "../lib/styles";
 
 interface DnsRecord {
   record_type: string;
@@ -24,9 +25,6 @@ interface WhoisResult {
 }
 
 const RECORD_TYPES = ["A", "AAAA", "MX", "NS", "TXT", "SOA", "SRV", "PTR", "CAA", "ALL"];
-
-const inputClass = "px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)_/_0.4)]";
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function DnsQueryPage() {
   const [domain, setDomain] = useState("google.com");
@@ -72,7 +70,7 @@ export default function DnsQueryPage() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-sm font-semibold">DNS / Whois 查询</h1>
+      <h1 className="text-sm font-semibold mb-3">DNS / Whois 查询</h1>
 
       {/* Mode toggle */}
       <div className="flex gap-2">

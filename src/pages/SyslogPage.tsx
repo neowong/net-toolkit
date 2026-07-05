@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-
-// ---- Shared styles ----------------------------------------------------------
-
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
-const labelClass = "block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1";
+import { btnClass, labelClass } from "../lib/styles";
 
 // ---- Syslog Receiver --------------------------------------------------------
 
@@ -69,7 +65,7 @@ function SyslogReceiver() {
 export default function SyslogPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">Syslog</h1>
+      <h1 className="text-sm font-semibold mb-3">Syslog</h1>
       <SyslogReceiver />
     </div>
   );

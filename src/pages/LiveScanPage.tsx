@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Loader2, Wifi } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { SpinInput } from "../components/ui/Input";
-
-// ---- Shared styles ----------------------------------------------------------
-
-const inputClass = "px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)_/_0.4)]";
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
-const labelClass = "block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1";
+import DataTable from "../components/DataTable";
+import StatusBadge from "../components/StatusBadge";
+import { inputClass, btnClass, labelClass } from "../lib/styles";
 
 // ---- Types ------------------------------------------------------------------
 
@@ -58,8 +55,37 @@ function LiveScanner() {
     }
   };
 
-  const alive = results?.filter(r => r.alive) ?? [];
-  const dead = results?.filter(r => !r.alive) ?? [];
+  const alive = useMemo(() => results?.filter(r => r.alive) ?? [], [results]);
+  const dead = useMemo(() => results?.filter(r => !r.alive) ?? [], [results]);
+
+  const columns = useMemo(() => [
+    {
+      key: "ip",
+      header: "IP 地址",
+      width: "40%",
+      render: (row: LiveHostResult) => (
+        <span className="font-mono">{row.ip}</span>
+      ),
+    },
+    {
+      key: "response_time_ms",
+      header: "响应时间",
+      width: "30%",
+      render: (row: LiveHostResult) => (
+        <span className="font-mono text-[hsl(var(--text-secondary))]">
+          {row.response_time_ms != null ? `${row.response_time_ms.toFixed(1)} ms` : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "状态",
+      width: "30%",
+      render: (row: LiveHostResult) => (
+        <StatusBadge status={row.alive ? "online" : "offline"} />
+      ),
+    },
+  ], []);
 
   return (
     <div className="space-y-3">
@@ -91,7 +117,7 @@ function LiveScanner() {
       {scanning && (
         <div className="flex items-center gap-2 text-sm text-[hsl(var(--text-secondary))]">
           <Loader2 size={16} className="animate-spin" />
-          已发现 {results?.filter(r => r.alive).length ?? 0} 个在线 / 扫描 {results?.length ?? 0} 个 ...
+          已发现 {alive.length} 个在线 / 扫描 {results?.length ?? 0} 个 ...
         </div>
       )}
 
@@ -111,34 +137,23 @@ function LiveScanner() {
             <span className="text-[hsl(var(--text-tertiary))]">共 {results.length} 个 IP</span>
           </div>
 
-          {alive.length > 0 && (
-            <div className="overflow-hidden rounded-lg border border-[hsl(var(--border))]">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-[hsl(var(--muted))] text-left">
-                    <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))]">IP 地址</th>
-                    <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))]">响应时间</th>
-                    <th className="px-4 py-2 font-medium text-[hsl(var(--text-secondary))]">状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {alive.map(r => (
-                    <tr key={r.ip} className="border-t border-[hsl(var(--border))]">
-                      <td className="px-4 py-2 font-mono">{r.ip}</td>
-                      <td className="px-4 py-2 font-mono text-[hsl(var(--text-secondary))]">
-                        {r.response_time_ms != null ? `${r.response_time_ms.toFixed(1)} ms` : "-"}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className="inline-flex items-center gap-1 text-[hsl(var(--success))]">
-                          <CheckCircle2 size={14} /> 在线
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {alive.length > 0 ? (
+            <DataTable
+              columns={columns}
+              data={alive}
+              rowKey={(r) => r.ip}
+              loading={scanning}
+              loadingText="扫描中..."
+              emptyText="暂无在线主机"
+              emptyIcon={<Wifi size={24} className="text-[hsl(var(--text-tertiary))]" />}
+              maxHeight="400px"
+            />
+          ) : !scanning && results.length > 0 ? (
+            <div className="text-center py-8 text-sm text-[hsl(var(--text-tertiary))]">
+              <Wifi size={24} className="mx-auto mb-2 opacity-50" />
+              <p>未发现在线主机</p>
             </div>
-          )}
+          ) : null}
 
           {dead.length > 0 && (
             <details className="text-xs">
@@ -163,7 +178,7 @@ function LiveScanner() {
 export default function LiveScanPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">存活扫描</h1>
+      <h1 className="text-sm font-semibold mb-3">存活扫描</h1>
       <LiveScanner />
     </div>
   );

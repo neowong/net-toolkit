@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { CheckCircle2, XCircle, Loader2, Download } from "lucide-react";
 import { SpinInput } from "../components/ui/Input";
+import { inputClass, btnClass } from "../lib/styles";
 
 interface PingResult {
   ip: string;
@@ -17,9 +18,6 @@ interface PingEvent {
   alive: boolean;
   response_time_ms: number | null;
 }
-
-const inputClass = "px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)_/_0.4)]";
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function BatchPingPage() {
   const [targets, setTargets] = useState("8.8.8.8\n114.114.114.114");
@@ -83,8 +81,8 @@ export default function BatchPingPage() {
     URL.revokeObjectURL(url);
   };
 
-  const aliveCount = results?.filter(r => r.alive).length ?? 0;
-  const deadCount = results ? results.length - aliveCount : 0;
+  const aliveCount = useMemo(() => results?.filter(r => r.alive).length ?? 0, [results]);
+  const deadCount = useMemo(() => results ? results.length - aliveCount : 0, [results, aliveCount]);
 
   const CHART_MAX = 50; // 图表最多显示最近 50 轮
 
@@ -115,7 +113,7 @@ export default function BatchPingPage() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-sm font-semibold">批量 Ping</h1>
+      <h1 className="text-sm font-semibold mb-3">批量 Ping</h1>
 
       <div className="flex gap-4">
         <div className="w-56">

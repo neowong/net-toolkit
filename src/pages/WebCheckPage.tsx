@@ -1,12 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { Loader2 } from "lucide-react";
 import { SpinInput } from "../components/ui/Input";
-
-// ---- Shared styles ----------------------------------------------------------
-
-const inputClass = "px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--bg-input))] text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent)_/_0.4)]";
-const btnClass = "px-5 py-2 rounded-lg text-sm font-medium text-white bg-[hsl(var(--accent))] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed";
-const labelClass = "block text-xs font-medium text-[hsl(var(--text-secondary))] mb-1";
+import { inputClass, btnClass, labelClass } from "../lib/styles";
 
 // ---- Types ------------------------------------------------------------------
 
@@ -28,22 +25,35 @@ function WebChecker() {
   const [scanning, setScanning] = useState(false);
   const [results, setResults] = useState<WebCheckResult[] | null>(null);
   const [error, setError] = useState("");
+  const unlistenRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => { unlistenRef.current?.(); }, []);
 
   const handleCheck = async () => {
     setError("");
-    setResults(null);
+    setResults([]);
     setScanning(true);
+
+    // 监听实时结果事件——每检测完一个 URL 就追加到列表
+    const unlisten = await listen<WebCheckResult>("web-check-result", (event) => {
+      setResults(prev => [...(prev ?? []), event.payload]);
+    });
+    unlistenRef.current = unlisten;
+
     const urlList = urls.split("\n").map(s => s.trim()).filter(Boolean);
-    if (urlList.length === 0) { setError("请输入至少一个URL"); setScanning(false); return; }
+    if (urlList.length === 0) { setError("请输入至少一个URL"); setScanning(false); unlisten(); return; }
     try {
       const data = await invoke<WebCheckResult[]>("check_web_urls", {
         urls: urlList,
         timeoutSecs: parseInt(timeout, 10) || 10,
       });
+      // 检测完成后用最终结果替换
       setResults(data);
     } catch (e: any) {
       setError(typeof e === "string" ? e : e?.message || String(e));
     } finally {
+      unlisten();
+      unlistenRef.current = null;
       setScanning(false);
     }
   };
@@ -54,6 +64,8 @@ function WebChecker() {
     if (code >= 300 && code < 400) return "text-[hsl(var(--warning))]";
     return "text-[hsl(var(--danger))]";
   };
+
+  const urlCount = urls.split("\n").map(s => s.trim()).filter(Boolean).length;
 
   return (
     <div className="space-y-3">
@@ -76,13 +88,20 @@ function WebChecker() {
           />
         </div>
         <button onClick={handleCheck} disabled={scanning} className={btnClass}>
-          {scanning ? "检测中..." : "开始检测"}
+          {scanning ? `检测中... (${results?.length ?? 0}/${urlCount})` : "开始检测"}
         </button>
       </div>
 
+      {scanning && (
+        <div className="flex items-center gap-2 text-sm text-[hsl(var(--text-secondary))]">
+          <Loader2 size={16} className="animate-spin" />
+          已检测 {results?.length ?? 0} / {urlCount} 个 URL
+        </div>
+      )}
+
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
 
-      {results && (
+      {results && results.length > 0 && (
         <div className="overflow-hidden rounded-lg border border-[hsl(var(--border))]">
           <table className="w-full text-sm">
             <thead>
@@ -137,7 +156,7 @@ function WebChecker() {
 export default function WebCheckPage() {
   return (
     <div>
-      <h1 className="text-sm font-semibold mb-2">WEB检测</h1>
+      <h1 className="text-sm font-semibold mb-3">WEB检测</h1>
       <WebChecker />
     </div>
   );

@@ -91,7 +91,15 @@ async fn check_one(client: &reqwest::Client, raw_url: &str) -> WebCheckResult {
     }
 }
 
-pub async fn check_urls(raw_urls: &[String], timeout_secs: u64) -> Vec<WebCheckResult> {
+/// 检测多个 URL，每完成一个就通过回调返回结果
+pub async fn check_urls_with_callback<F>(
+    raw_urls: &[String],
+    timeout_secs: u64,
+    callback: F,
+) -> Vec<WebCheckResult>
+where
+    F: Fn(&WebCheckResult) + Send + Sync + 'static,
+{
     let client = match reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout_secs))
         .danger_accept_invalid_certs(false)
@@ -116,11 +124,18 @@ pub async fn check_urls(raw_urls: &[String], timeout_secs: u64) -> Vec<WebCheckR
         }
     };
 
+    let callback = std::sync::Arc::new(callback);
     let mut tasks = Vec::with_capacity(raw_urls.len());
     for raw_url in raw_urls {
         let c = client.clone();
         let u = raw_url.clone();
-        tasks.push(tokio::spawn(async move { check_one(&c, &u).await }));
+        let cb = callback.clone();
+        tasks.push(tokio::spawn(async move {
+            let result = check_one(&c, &u).await;
+            // 每检测完一个 URL 立即回调
+            cb(&result);
+            result
+        }));
     }
 
     let mut results = Vec::with_capacity(tasks.len());
@@ -139,4 +154,8 @@ pub async fn check_urls(raw_urls: &[String], timeout_secs: u64) -> Vec<WebCheckR
         });
     }
     results
+}
+
+pub async fn check_urls(raw_urls: &[String], timeout_secs: u64) -> Vec<WebCheckResult> {
+    check_urls_with_callback(raw_urls, timeout_secs, |_| {}).await
 }
