@@ -321,7 +321,10 @@ fn run_traceroute_stream(
         ])
     } else {
         let secs = timeout_ms.div_ceil(1000);
-        ("traceroute", vec![
+        // 使用 stdbuf -oL 强制行缓冲，确保逐行实时输出
+        ("stdbuf", vec![
+            "-oL".to_string(),
+            "traceroute".to_string(),
             "-n".to_string(),
             "-m".to_string(), max_hops.to_string(),
             "-w".to_string(), secs.to_string(),
@@ -354,8 +357,11 @@ fn run_traceroute_stream(
     })?;
 
     // 正则预编译
-    let hop_re = regex::Regex::new(r"^\s*(\d+)\s").unwrap();
+    // 匹配跳数：行首可能有空格，然后是数字
+    let hop_re = regex::Regex::new(r"^\s*(\d+)").unwrap();
+    // 匹配 IP 地址
     let ip_re = regex::Regex::new(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})").unwrap();
+    // 匹配延迟
     let ms_re = regex::Regex::new(r"(\d+(?:\.\d+)?)\s*ms").unwrap();
 
     // 逐行读 stdout，实时解析
@@ -368,10 +374,11 @@ fn run_traceroute_stream(
         };
         tracing::trace!("[trace_route] {}", line);
 
-        // 尝试解析跳数
+        // 跳过非跳数行（如标题行 "traceroute to ..."）
         let Some(hop_cap) = hop_re.captures(&line) else { continue };
         let hop: u32 = match hop_cap[1].parse() { Ok(n) => n, Err(_) => continue };
 
+        // 解析 IP 和延迟（超时时为 None）
         let ip = ip_re.captures(&line).map(|c| c[1].to_string());
         let rtt = ms_re.captures(&line).and_then(|c| c[1].parse::<f64>().ok());
 
